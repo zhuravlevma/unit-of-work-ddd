@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from './prisma/prisma.service';
-import { UserController } from './user/user.controller';
+import { UserController } from './user/controllers/user.controller';
 import { UserService } from './user/domain/user.service';
 import { UserRepository } from './user/dal/user.repository';
-import { PrismaTransactionScope } from './prisma/prisma-transactional-scope';
-import { UnitOfWork } from './prisma/unit-of-work';
-import { CLSService } from './prisma/cls.service';
+import { ConfigModule } from '@nestjs/config';
+import { PrismaProvider } from './prisma/prisma-provider';
+import { DatabaseModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+    DatabaseModule,
+  ],
   controllers: [UserController],
   providers: [
-    UserService,
-    PrismaTransactionScope,
-    UserRepository,
-    CLSService,
-    PrismaService,
     {
-      provide: UnitOfWork,
-      useClass: PrismaTransactionScope,
+      provide: UserService,
+      useFactory: (a, b) => new UserService(a, b),
+      inject: [UserRepository, PrismaProvider],
     },
+    UserRepository,
   ],
 })
 export class AppModule {}

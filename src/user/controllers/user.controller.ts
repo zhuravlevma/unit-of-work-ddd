@@ -7,7 +7,7 @@ import {
   Get,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { UserService } from './domain/user.service';
+import { UserService } from '../domain/user.service';
 import { CreateUserDto } from './create-user.dto';
 
 @Controller('users')
@@ -21,6 +21,7 @@ export class UserController {
       const user = await this.userService.getUser();
       return user;
     } catch (error) {
+      console.error(error);
       throw new HttpException(
         'Failed to create user',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -31,11 +32,12 @@ export class UserController {
   @Post('/')
   @ApiOperation({ summary: 'Create a new user' })
   @ApiBody({ type: CreateUserDto })
-  async createUser2(@Body() userData: CreateUserDto) {
+  async createUser(@Body() userData: CreateUserDto) {
     try {
       const user = await this.userService.createUser(userData);
       return user;
     } catch (error) {
+      console.error(error);
       throw new HttpException(
         'Failed to create user',
         HttpStatus.INTERNAL_SERVER_ERROR,

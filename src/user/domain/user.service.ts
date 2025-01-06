@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import { UserRepository } from '../dal/user.repository';
-import { UnitOfWork as UnitOfWork } from 'src/prisma/unit-of-work';
+import { PrismaProvider } from 'src/prisma/prisma-provider';
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepository: UserRepository,
-    private readonly unitOfWork: UnitOfWork<Prisma.TransactionClient>,
+    private readonly prisma: PrismaProvider,
   ) {}
 
   async getUser(): Promise<User[]> {
@@ -15,19 +15,14 @@ export class UserService {
 
   async createUser(userData: Prisma.UserCreateInput): Promise<any> {
     try {
-      const res = this.unitOfWork.runInTransaction(async (tx) => {
-        await this.userRepository.create(userData, { tx });
-        return this.userRepository.update(
-          1,
-          {
-            age: 1000,
-          },
-          { tx },
-        );
+      return this.prisma.transaction(async () => {
+        await this.userRepository.create(userData);
+        return this.userRepository.update(1, {
+          age: Math.floor(Math.random() * 100),
+        });
       });
-      return res;
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }
 }
